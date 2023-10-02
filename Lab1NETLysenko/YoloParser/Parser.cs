@@ -18,7 +18,8 @@ namespace YoloParser
     public class Parser
     {
         private readonly IServices services;
-        private InferenceSession? session = null;
+        private InferenceSession session;
+        private Task initModelTask;
         
         public Parser(IServices services)
         {
@@ -26,7 +27,7 @@ namespace YoloParser
 
         }
         
-        public async Task InitModel()
+        public async Task InitModelAsync()
         {
             string neuralNetName = "tinyyolov2-8.onnx";
             string url = "https://storage.yandexcloud.net/dotnet4/tinyyolov2-8.onnx";
@@ -53,9 +54,17 @@ namespace YoloParser
             session = new InferenceSession(neuralNetName);
         }
 
-        public async Task<(string fileName, List<ObjectBox>)> Analyze(string path, CancellationToken ctoken)
+        public async Task<(string fileName, List<ObjectBox>)> AnalyzeAsync(string path, CancellationToken ctoken)
         {
-            await InitModel();
+            lock(initModelTask)
+            {
+                if (initModelTask == null)
+                {
+                    initModelTask = InitModelAsync();
+                }
+            }
+            await initModelTask;
+
             return await Task.Factory.StartNew(_ => {
                 using var image = Image.Load<Rgb24>(path);
 

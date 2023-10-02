@@ -20,7 +20,7 @@ namespace Lab1NETLysenko
             var tokenSource = new CancellationTokenSource();
             var tasks = Enumerable.Range(0, args.Length).Select(i =>
             {
-                var t = pars.Analyze(args[i], tokenSource.Token);
+                var t = pars.AnalyzeAsync(args[i], tokenSource.Token);
                 Console.WriteLine($"{i}");
                 return t;
             }).ToArray();
@@ -31,7 +31,7 @@ namespace Lab1NETLysenko
 
             try
             {
-                await Task.WhenAll(tasks);
+                await Task.WhenAny(tasks);
                 foreach (var res in tasks)
                     SaveResults(res.Result);
             }
