@@ -6,27 +6,39 @@
         xmlns:local="clr-namespace:Lab2NET"
         mc:Ignorable="d"
         Title="MainWindow" Height="500" Width="800">
-      
+
     <Grid>
-        <UniformGrid Rows="1" Columns="4" HorizontalAlignment="Left" VerticalAlignment="Top" Margin="2,2,2,2" >
+        <Grid.RowDefinitions>
+            <RowDefinition Height="30"/>
+            <RowDefinition/>
+        </Grid.RowDefinitions>
+        <UniformGrid Grid.Row="0" Rows="1" Columns="4" HorizontalAlignment="Left" VerticalAlignment="Top" Margin="2,2,2,2" >
             <Button Content="Выбрать каталог" Command="{Binding SelectDirectory}" Margin="0,0,5,0" />
             <Button Content="Выполнить" Command="{Binding ProcessPars}" Margin="0,0,5,0" />
             <Button Content="Отменить" Command="{Binding Cancellation}" Margin="0,0,5,0" />
-            <Button Content="Очистить" Command="{Binding ClearOutputFields}" Margin="0,0,5,0"/>
+            <!--<Button Content="Очистить" Command="{Binding ClearOutputFields}" Margin="0,0,5,0"/>-->
 
 
         </UniformGrid>
+        <Grid Grid.Row="2">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="2*" />
+                <ColumnDefinition Width="3*" />
+            </Grid.ColumnDefinitions>
 
-        <!--<ListBox Name="ImgList" ItemsSource="{Binding }" ItemTemplate="{StaticResource key_infoList}" VerticalAlignment="Bottom" HorizontalAlignment="Left" Margin="5,5,5,5" Height="400" Width="290" />
-        <Image HorizontalAlignment="Right" VerticalAlignment="Bottom" Margin="5,5,5,5" Height="400" Width="490"/>-->
-        <ListBox Name="ListParsData" ItemsSource="{Binding bindListParsData}" VerticalAlignment="Bottom" HorizontalAlignment="Left" Margin="5,5,5,5" Height="400" Width="290" SelectionChanged="ListParsData_SelectionChanged">
-            <ListBox.ItemTemplate>
-                <DataTemplate>
-                    <TextBlock Text="{Binding}"/>
-                </DataTemplate>
-            </ListBox.ItemTemplate>
-        </ListBox>
+           
+            <ListBox Grid.Column="0" Name="ListParsData" ItemsSource="{Binding bindListParsData}" VerticalAlignment="Stretch" HorizontalAlignment="Stretch" Margin="5,5,5,5" SelectionChanged="ListParsData_SelectionChanged">
+                <ListBox.ItemTemplate>
+                    <DataTemplate DataType="{x:Type local:ImgTemplate}">
+                        <StackPanel>
+                            <Image Source="{Binding Image}" Width="50" Height="50"/>
+                            <TextBlock Margin="3" Text="{Binding Str}"/>
+                        </StackPanel>
+                    </DataTemplate>
+                </ListBox.ItemTemplate>
+            </ListBox>
 
-        <Image Name="ImageControl" HorizontalAlignment="Right" VerticalAlignment="Bottom" Margin="5,5,5,5" Height="400" Width="490"/>
+            <Image Grid.Column="1" Name="ImageControl" HorizontalAlignment="Stretch" VerticalAlignment="Stretch" Margin="5,5,5,5"/>
+        </Grid>
     </Grid>
 </Window>

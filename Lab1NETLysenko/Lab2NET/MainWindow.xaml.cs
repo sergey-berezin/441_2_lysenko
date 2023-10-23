@@ -23,6 +23,8 @@ using YoloParser;
 using SixLabors.ImageSharp;
 using SixLabors.ImageSharp.PixelFormats;
 using SixLabors.ImageSharp.Formats.Png;
+using System.Drawing;
+using static System.Net.Mime.MediaTypeNames;
 
 namespace Lab2NET
 {
@@ -37,8 +39,8 @@ namespace Lab2NET
 
 
 
-        public ObservableCollection<YoloParser.ImageInfo> imgInfoCollection = new ObservableCollection<YoloParser.ImageInfo>();
-
+        public ObservableCollection<YoloParser.ImageInfo> imgInfoCollection = new();
+        //public List<ObservableCollection<YoloParser.ImageInfo>> ListImgInfoCollection = new();
         private CancellationTokenSource cts = new();
         List<string> pathList = new();
 
@@ -108,39 +110,32 @@ namespace Lab2NET
 
                 var pars = new YoloParser.Parser(new Services());
 
-                //var tasks = Enumerable.Range(0, pathList.Count).Select(i =>
-                //{
-                //    return pars.AnalyzeAsync(pathList[i], ctn);
-                //}).ToArray();
+                var tasks = Enumerable.Range(0, pathList.Count).Select(i =>
+                {
+                    return pars.AnalyzeAsync(pathList[i], ctn);
+                }).ToArray();
+
+
+
+                await Task.WhenAll(tasks);
+                foreach (var res in tasks)
+                    SaveResults(res.Result);
 
                 
 
-                //await Task.WhenAny(tasks);
-                //foreach (var res in tasks)
-                //    SaveResults(res.Result);
-
-                foreach (var path in pathList) 
-                {
-                    var task = await pars.AnalyzeAsync(path, ctn);
-
-                    SaveResults(task);
-
-                }
-
-                if (pathList.Count == imgInfoCollection.Count)
+                if (pathList.Count <= imgInfoCollection.Count)
                 {
                     cancellationFlag = false;
                     clearFlag = true;
                     var ordered = imgInfoCollection.OrderBy(info => info.ClassName).ThenByDescending(info => info.Confidence);
                     foreach (var info in ordered)
                     {
-                        ListParsData.Items.Add($"ClassName= {info.ClassName}; Confidence= {info.Confidence}");
+                        BitmapSource myImage = ConvertToBitmapSource(info.DetectedObjectImage);
+                        CroppedBitmap chunk = new CroppedBitmap(myImage, new Int32Rect((int)info.LeftUpperCornerX, (int) info.LeftUpperCornerY , (int) info.Width, (int) info.Height));
+                        //ListParsData.Items.Add($"ClassName= {info.ClassName}; Confidence= {info.Confidence}");
+                        ListParsData.Items.Add(new ImgTemplate($"ClassName= {info.ClassName}; Confidence= {info.Confidence}", chunk));
                     }
-                    //foreach (var info in imgInfoCollection)
-                    //{
-                    //    ListParsData.Items.Add($"ClassName= {info.ClassName}; Confidence= {info.Confidence}");
-                    //}
-                    //СОРТИРОВКА
+                    
                 }
             }
             catch (OperationCanceledException)
@@ -150,15 +145,7 @@ namespace Lab2NET
                 processFlag = false;
                 clearFlag = true;
             }
-            catch (Exception ex)
-            {
-                Console.WriteLine(ex.ToString());
-            }
-
-            //catch (Exception ex) when (ex is OperationCanceledException || ex is TaskCanceledException)
-            //{
-            //    Console.WriteLine("Detecting cancelled!");
-            //}
+            
 
 
         }
@@ -181,7 +168,10 @@ namespace Lab2NET
                 var bitmapSource = new BitmapImage();
                 bitmapSource.BeginInit();
                 bitmapSource.StreamSource = new MemoryStream(memoryStream.ToArray());
+                bitmapSource.CacheOption = BitmapCacheOption.OnLoad;
+
                 bitmapSource.EndInit();
+                bitmapSource.StreamSource.Dispose();
 
                 return bitmapSource;
             }
@@ -212,7 +202,8 @@ namespace Lab2NET
             pathList.Clear();
             clearFlag = false;
             processFlag = true;
-            ListParsData.Items.Clear();
+            //ImageControl.Source = null;
+            //ListParsData.Items.Clear();
         }
 
         private bool CanClear(object sender)
@@ -227,7 +218,6 @@ namespace Lab2NET
             foreach (var info in res)
             {
                 imgInfoCollection.Add(info);
-                info.SaveAsJpeg();
             }
         }
 
