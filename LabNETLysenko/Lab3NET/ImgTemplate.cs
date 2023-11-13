@@ -18,6 +18,9 @@ namespace Lab3NET
     public class ImageInfoForBase64
     {
         public string OriginaImage { get; }
+        public int OriginalImageWidth { get; }
+        public int OriginalImageHeight { get; }
+
         public string FileName { get; }
         public int ClassNumber { get; }
         public string ClassName { get; }
@@ -28,13 +31,17 @@ namespace Lab3NET
         public double Width { get; }
         public double Height { get; }
         public string DetectedObjectImage { get; }
+        public int DetectedObjectImageWidth { get; }
+        public int DetectedObjectImageHeight { get; }
 
-        public ImageInfoForBase64(string originaImage, string fileName, int classNumber,
+        public ImageInfoForBase64(string originaImage, int originalImageWidth, int originalImageHeight, string fileName, int classNumber,
             string className, double leftUpperCornerX,
             double leftUpperCornerY, double width, double height,
-            string detectedObjectImage, double confidence)
+            string detectedObjectImage, int detectedObjectImageWidth, int detectedObjectImageHeight, double confidence)
         {
             OriginaImage = originaImage;
+            OriginalImageWidth = originalImageWidth;
+            OriginalImageHeight = originalImageHeight;
             FileName = fileName;
             ClassNumber = classNumber;
             ClassName = className;
@@ -43,6 +50,8 @@ namespace Lab3NET
             Width = width;
             Height = height;
             DetectedObjectImage = detectedObjectImage;
+            DetectedObjectImageWidth = detectedObjectImageWidth;
+            DetectedObjectImageHeight = detectedObjectImageHeight;
             Confidence = confidence;
         }
     }

@@ -24,6 +24,7 @@ using System.Windows.Documents;
 using System.Windows.Input;
 using System.Windows.Media;
 using System.Windows.Media.Imaging;
+using System.Windows.Media.Media3D;
 using System.Windows.Navigation;
 using System.Windows.Shapes;
 
@@ -298,29 +299,36 @@ namespace Lab3NET
             }
         }
 
-        private Image<Rgb24> ConvertBase64ToImage(string base64)
+        private Image<Rgb24> ConvertBase64ToImage(string base64, int width, int height)
         {
-            byte[] imageBytes = Convert.FromBase64String(base64);
-            using (MemoryStream ms = new MemoryStream(imageBytes))
-            {
-                return SixLabors.ImageSharp.Image.Load<Rgb24>(ms);
-            }
+            byte[] rgbBytes = Convert.FromBase64String(base64);
+            return SixLabors.ImageSharp.Image.LoadPixelData<Rgb24>(rgbBytes, width, height);
+            //    byte[] imageBytes = Convert.FromBase64String(base64);
+            //using (MemoryStream ms = new MemoryStream(imageBytes))
+            //{
+            //    return SixLabors.ImageSharp.Image.Load<Rgb24>(ms);
+            //}
         }
         private byte[] ConvertImageToByte(Image<Rgb24> image)
         {
+            byte[] pixelBytes = new byte[image.Width * image.Height * Unsafe.SizeOf<Rgb24>()];
+
+            image.CopyPixelDataTo(pixelBytes);
+
+            return pixelBytes;
             //var MemoryGroup = image.GetPixelMemoryGroup();
             //var Array = MemoryGroup.ToArray()[0];
             //return Convert.ToBase64String(MemoryMarshal.AsBytes(Array.Span));
-            using (MemoryStream ms = new())
-            {
-                //ms.Flush();
-                //ms.Seek(0, SeekOrigin.Begin);
-                image.SaveAsJpeg(ms);
-                byte[] imageBytes = ms.ToArray();
+            //using (MemoryStream ms = new())
+            //{
+            //    //ms.Flush();
+            //    //ms.Seek(0, SeekOrigin.Begin);
+            //    image.SaveAsJpeg(ms);
+            //    byte[] imageBytes = ms.ToArray();
 
-                return imageBytes;
-                //return Convert.ToBase64String(imageBytes);
-            }
+            //    return imageBytes;
+            //    //return Convert.ToBase64String(imageBytes);
+            //}
         }
 
 
@@ -342,11 +350,17 @@ namespace Lab3NET
 
                         byte[] OriginaImage = ConvertImageToByte(info.OriginaImage);
                         byte[] DetectedObjectImage = ConvertImageToByte(info.DetectedObjectImage);
+                        int OriginaImageWidth = info.OriginaImage.Width;
+                        int OriginalImageHeight = info.OriginaImage.Height;
+                        int DetectedObjectImageWidth = info.DetectedObjectImage.Width;
+                        int DetectedObjectImageHeight = info.DetectedObjectImage.Height;
                         if (!imgInfoCollectionForBase64.Any(item => AreImagesEqual(Convert.FromBase64String(item.OriginaImage), OriginaImage)))
                         {
                             imgInfoCollectionForBase64.Add(
                             new ImageInfoForBase64(
                                 Convert.ToBase64String(OriginaImage),
+                                OriginaImageWidth,
+                                OriginalImageHeight,
                                 info.FileName,
                                 info.ClassNumber,
                                 info.ClassName,
@@ -355,6 +369,8 @@ namespace Lab3NET
                                 info.Width,
                                 info.Height,
                                 Convert.ToBase64String(DetectedObjectImage),
+                                DetectedObjectImageWidth,
+                                DetectedObjectImageHeight,
                                 info.Confidence
                                 )
                             );
@@ -415,8 +431,8 @@ namespace Lab3NET
                     imgInfoCollectionForBase64 = loadedData;
                     foreach (var item in loadedData)
                     {
-                        Image<Rgb24> OriginaImage = ConvertBase64ToImage(item.OriginaImage);
-                        Image<Rgb24> DetectedObjectImage = ConvertBase64ToImage(item.DetectedObjectImage);
+                        Image<Rgb24> OriginaImage = ConvertBase64ToImage(item.OriginaImage, item.OriginalImageWidth , item.OriginalImageHeight);
+                        Image<Rgb24> DetectedObjectImage = ConvertBase64ToImage(item.DetectedObjectImage, item.DetectedObjectImageWidth, item.DetectedObjectImageHeight);
                         imgInfoCollection.Add(
                             new YoloParser.ImageInfo(
                                 OriginaImage,
