@@ -98,7 +98,7 @@ namespace Lab3NET
                                        file.EndsWith(".jpeg", StringComparison.OrdinalIgnoreCase) ||
                                        file.EndsWith(".png", StringComparison.OrdinalIgnoreCase)))
                     {
-                        if (!imgInfoCollection.Any(item => AreImagesEqual(item.OriginaImage, SixLabors.ImageSharp.Image.Load<Rgb24>(imagePath))))
+                        if (!imgInfoCollectionForBase64.Any(item => AreImagesEqual(Convert.FromBase64String(item.OriginaImage), ConvertImageToByte(SixLabors.ImageSharp.Image.Load<Rgb24>(imagePath)))))
                         {
                             pathList.Add(imagePath);
                         }
@@ -113,10 +113,8 @@ namespace Lab3NET
             }
         }
 
-        private bool AreImagesEqual(Image<Rgb24> image1, Image<Rgb24> image2)
+        private bool AreImagesEqual(byte[] bytes1, byte[] bytes2)
         {
-            var bytes1 = ConvertImageToBase64(image1);
-            var bytes2 = ConvertImageToBase64(image2);
 
             if (bytes1.Length != bytes2.Length)
             {
@@ -163,10 +161,11 @@ namespace Lab3NET
                     SaveResults(res.Result);
                 }
 
-                SaveToJSON("data.json", imgInfoCollection);
 
                 if (pathList.Count <= imgInfoCollection.Count)
                 {
+                    //SaveToJSON("data.json", imgInfoCollection);
+
                     cancellationFlag = false;
                     clearFlag = true;
                     ImageControl.Source = null;
@@ -192,6 +191,10 @@ namespace Lab3NET
             {
                 MessageBox.Show($"An error occurred: {ex.Message}\n\nStack Trace:\n{ex.StackTrace}", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
 
+            }
+            finally
+            {
+                SaveToJSON("data.json", imgInfoCollection);
             }
         }
 
@@ -303,7 +306,7 @@ namespace Lab3NET
                 return SixLabors.ImageSharp.Image.Load<Rgb24>(ms);
             }
         }
-        private string ConvertImageToBase64(Image<Rgb24> image)
+        private byte[] ConvertImageToByte(Image<Rgb24> image)
         {
             //var MemoryGroup = image.GetPixelMemoryGroup();
             //var Array = MemoryGroup.ToArray()[0];
@@ -314,7 +317,9 @@ namespace Lab3NET
                 //ms.Seek(0, SeekOrigin.Begin);
                 image.SaveAsJpeg(ms);
                 byte[] imageBytes = ms.ToArray();
-                return Convert.ToBase64String(imageBytes);
+
+                return imageBytes;
+                //return Convert.ToBase64String(imageBytes);
             }
         }
 
@@ -327,21 +332,21 @@ namespace Lab3NET
                 {
                     File.Create(filePath).Close();
                 }
-                string backupPath = System.IO.Path.Combine(System.IO.Path.GetDirectoryName(filePath), System.IO.Path.GetFileNameWithoutExtension(filePath) + "_backup.json");
-                File.Copy(filePath, backupPath, true);
+                //string backupPath = System.IO.Path.Combine(System.IO.Path.GetDirectoryName(filePath), System.IO.Path.GetFileNameWithoutExtension(filePath) + "_backup.json");
+                //File.Copy(filePath, backupPath, true);
 
                 if (imgInfoCollection != null)
                 {
                     foreach (var info in imgInfoCollection)
                     {
-                        string OriginaImage = ConvertImageToBase64(info.OriginaImage);
-                        string DetectedObjectImage = ConvertImageToBase64(info.DetectedObjectImage);
 
-                        if (!imgInfoCollectionForBase64.Any(item => item.DetectedObjectImage == DetectedObjectImage))
+                        byte[] OriginaImage = ConvertImageToByte(info.OriginaImage);
+                        byte[] DetectedObjectImage = ConvertImageToByte(info.DetectedObjectImage);
+                        if (!imgInfoCollectionForBase64.Any(item => AreImagesEqual(Convert.FromBase64String(item.OriginaImage), OriginaImage)))
                         {
                             imgInfoCollectionForBase64.Add(
                             new ImageInfoForBase64(
-                                OriginaImage,
+                                Convert.ToBase64String(OriginaImage),
                                 info.FileName,
                                 info.ClassNumber,
                                 info.ClassName,
@@ -349,16 +354,35 @@ namespace Lab3NET
                                 info.LeftUpperCornerY,
                                 info.Width,
                                 info.Height,
-                                DetectedObjectImage,
+                                Convert.ToBase64String(DetectedObjectImage),
                                 info.Confidence
                                 )
                             );
                         }
+
+                            //imgInfoCollectionForBase64.Add(
+                            //new ImageInfoForBase64(
+                            //    Convert.ToBase64String(OriginaImage),
+                            //    info.FileName,
+                            //    info.ClassNumber,
+                            //    info.ClassName,
+                            //    info.LeftUpperCornerX,
+                            //    info.LeftUpperCornerY,
+                            //    info.Width,
+                            //    info.Height,
+                            //    Convert.ToBase64String(DetectedObjectImage),
+                            //    info.Confidence
+                            //    )
+                            //);
+
                     }
                 }
 
                 string json = JsonConvert.SerializeObject(imgInfoCollectionForBase64, Formatting.Indented);
                 File.WriteAllText(filePath, json);
+
+                string backupPath = System.IO.Path.Combine(System.IO.Path.GetDirectoryName(filePath), System.IO.Path.GetFileNameWithoutExtension(filePath) + "_backup.json");
+                File.Copy(filePath, backupPath, true);
             }
             catch (Exception ex)
             {
@@ -385,8 +409,10 @@ namespace Lab3NET
                 var loadedData = JsonConvert.DeserializeObject<ObservableCollection<ImageInfoForBase64>>(json);
 
                 imgInfoCollection.Clear();
+                imgInfoCollectionForBase64.Clear();
                 if (loadedData != null)
                 {
+                    imgInfoCollectionForBase64 = loadedData;
                     foreach (var item in loadedData)
                     {
                         Image<Rgb24> OriginaImage = ConvertBase64ToImage(item.OriginaImage);
