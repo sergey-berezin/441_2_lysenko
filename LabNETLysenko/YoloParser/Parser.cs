@@ -26,7 +26,7 @@ namespace YoloParser
             this.services = services;
 
         }
-        
+
         public async Task InitModelAsync()
         {
             string neuralNetName = "tinyyolov2-8.onnx";
@@ -56,23 +56,11 @@ namespace YoloParser
 
         public async Task<List<ImageInfo>> AnalyzeAsync(string path, CancellationToken ctoken)
         {
-            //if (!isModelInitialized)
-            //{
-            //    lock(initModelLock)
-            //    {
-            //        if (!isModelInitialized)
-            //        {
-            //            initModelTask = InitModelAsync();
-            //            isModelInitialized = true;
-
-            //        }
-            //    }
-            //    await initModelTask;
-            //}
 
             await InitModelAsync();
 
-            return await Task.Factory.StartNew(_ => {
+            return await Task.Factory.StartNew(_ =>
+            {
                 using var image = Image.Load<Rgb24>(path);
 
                 int imageWidth = image.Width;
@@ -266,7 +254,7 @@ namespace YoloParser
                         }
                     }
                 }
-              
+
                 var final = resized.Clone();
                 Annotate(final, objects);
                 var result = new List<ImageInfo>();
@@ -287,7 +275,7 @@ namespace YoloParser
                 //return (path, objects);
 
             }, ctoken, TaskCreationOptions.LongRunning);
-            
+
         }
     }
 

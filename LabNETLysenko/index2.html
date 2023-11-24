@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8" />
+    <title>Object Detection</title>
+    <style>
+        #image-container {
+            position: relative;
+            margin-bottom: 20px;
+        }
+        .bounding-box {
+            position: absolute;
+            border: 2px solid red;
+            pointer-events: none;
+        }
+    </style>
+</head>
+<body>
+    <input type="file" id="upload_file" accept="image/*">
+    <img id="uploaded_image" src="#" alt="Uploaded Image" style="display:none; max-width: 500px;">
+
+    <div id="image-container"></div>
+
+    <ul id="object-list"></ul>
+
+    <script type="text/javascript" src="https://ajax.googleapis.com/ajax/libs/jquery/1.8.3/jquery.min.js"></script>
+    <script type="text/javascript">
+        const url = "http://localhost:5148";
+
+        const fileInput = document.getElementById("upload_file");
+        const uploadedImage = document.getElementById("uploaded_image");
+
+        fileInput.addEventListener("change", handleFileSelect);
+
+        function handleFileSelect(event) {
+            const file = fileInput.files[0];
+            const reader = new FileReader();
+
+            reader.addEventListener("load", () => {           
+                uploadedImage.src = reader.result;
+                uploadedImage.style.display = "block";
+
+                const getBase64StringFromDataURL = (dataURL) =>
+                    dataURL.replace('data:', '').replace(/^.+,/, '');
+                
+                var base64 = getBase64StringFromDataURL(reader.result)
+                console.log(reader.result);
+                sendImageToServer(base64);
+            });
+
+            reader.readAsDataURL(file);
+        }
+
+        async function sendImageToServer(imageData) {
+            try{
+                const response = await fetch(url + "/ImageAnalysis/analyze", {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json"
+                    },
+                    body: JSON.stringify(imageData)
+                });
+
+                if (!response.ok) {
+                    throw new Error('Error analyzing image');
+                }
+
+                const data = response.json();
+                displayObjects(data);
+                
+                const imageUrl = URL.createObjectURL(file);
+                displayImage(imageUrl, imageContainer);
+            } catch (error) {
+                console.error('Error:', error);
+            }
+
+
+        }
+        function displayImage(url, container) {
+            container.innerHTML = `<img src="${url}" alt="Uploaded Image" width="400">`;
+        }    
+        
+        function displayObjects(objects) {
+            const imageContainer = document.getElementById('image-container');
+            const objectList = document.getElementById('object-list');
+
+            // Отображение прямоугольников и списка объектов
+            objects.forEach(obj => {
+                const boundingBox = document.createElement('div');
+                boundingBox.classList.add('bounding-box');
+                boundingBox.style.left = obj.LeftUpperCornerX + 'px';
+                boundingBox.style.top = obj.LeftUpperCornerY + 'px';
+                boundingBox.style.width = obj.Width + 'px';
+                boundingBox.style.height = obj.Height + 'px';
+                imageContainer.appendChild(boundingBox);
+
+                const listItem = document.createElement('li');
+                listItem.textContent = `${obj.ClassName}: ${obj.Confidence}`;
+                listItem.addEventListener('click', () => highlightBoundingBox(boundingBox));
+                objectList.appendChild(listItem);
+            });
+        }
+
+        function highlightBoundingBox(box) {
+            const boundingBoxes = document.querySelectorAll('.bounding-box');
+            boundingBoxes.forEach(b => b.style.border = '2px solid red');
+            box.style.border = '2px solid blue';
+        }
+    </script>
+</body>
+</html>
