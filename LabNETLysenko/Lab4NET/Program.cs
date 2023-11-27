@@ -21,15 +21,7 @@ builder.Services.AddLogging(loggingBuilder =>
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
-//builder.Services.AddCors(o => o.AddPolicy("Cors", builder =>
-//{
-//    builder
-//        .WithOrigins("http://127.0.0.1:5500")
-//        .WithOrigins("http://127.0.0.1:5501")
-//        .WithHeaders("*")
-//        .WithMethods("*")
-//        .AllowCredentials();
-//}));
+//builder.Services.AddCors(o => o.AddPolicy("Cors", ));
 var app = builder.Build();
 
 // Configure the HTTP request pipeline.
@@ -39,11 +31,17 @@ if (app.Environment.IsDevelopment())
     app.UseSwaggerUI();
 }
 
-app.UseHttpsRedirection();
+//app.UseHttpsRedirection();
 
 //app.UseAuthorization();
 
-//app.UseCors("Cors");
+app.UseCors(builder =>
+{
+    builder
+        .WithOrigins("*")
+        .WithHeaders("*")
+        .WithMethods("*");
+});
 
 app.MapControllers();
 

@@ -24,16 +24,11 @@ namespace Lab4NET.Controllers
 
         
         [HttpPost]
-        [Route("analyze")]
+        [Route("analyzeImage")]
         public async Task<IActionResult> AnalyzeImage([FromBody] string base64Image)
         {
             try
             {
-                
-
-                //var formCollection = await Request.ReadFormAsync();
-                //var base64Image = formCollection["image"]; // Retrieve base64 image data
-
                 if (string.IsNullOrEmpty(base64Image))
                 {
                     logger.LogInformation("No image data provided. Empty base64");
@@ -44,7 +39,7 @@ namespace Lab4NET.Controllers
                 // Convert base64 string to byte array
                 byte[] bytes = Convert.FromBase64String(base64Image);
                 // Генерация уникального имени файла
-                var fileName = Guid.NewGuid().ToString();
+                var fileName = Guid.NewGuid().ToString() + ".jpg";
 
                 // Сохранение файла на сервере
                 var filePath = Path.Combine("C:\\Users\\79250\\Documents\\LabNETLysenko\\Lab4NET\\Data", fileName);
@@ -52,10 +47,9 @@ namespace Lab4NET.Controllers
                 await System.IO.File.WriteAllBytesAsync(filePath, bytes);
 
                 //Вызов метода для анализа изображения
-                var imageInfo = await pars.AnalyzeAsync(filePath, HttpContext.RequestAborted);
+                var imageInfo = await pars.AnalyzeAsync(filePath, new CancellationToken());
 
-                //return Ok(imageInfo);
-                // Преобразование результатов в формат JSON
+                //// Преобразование результатов в формат JSON
                 var jsonResults = imageInfo.Select(result => new
                 {
                     result.LeftUpperCornerX,
@@ -86,13 +80,6 @@ namespace Lab4NET.Controllers
             }
               
         }
-
-        //private bool IsImageFile(IFormFile file)
-        //{
-        //    string[] permittedExtensions = { ".jpg", ".jpeg", ".png" };
-        //    var ext = Path.GetExtension(file.FileName).ToLowerInvariant();
-        //    return !string.IsNullOrEmpty(ext) && permittedExtensions.Contains(ext);
-        //}
     }
     
 }

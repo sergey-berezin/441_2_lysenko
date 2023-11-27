@@ -269,11 +269,7 @@ namespace YoloParser
                     objectCount++;
                 }
                 return result;
-                ////final.SaveAsJpeg("Result\\" + path.Replace(".", "") + "_final_" + DateTime.Now.ToString("HH_mm_ss") + ".jpg");
-                //string fileNameWithoutExtension = Path.GetFileNameWithoutExtension(path);
-                //final.SaveAsJpeg("C:\\Users\\79250\\Documents\\С#\\Lab1NETLysenko\\Lab2NET\\Result\\" + fileNameWithoutExtension + ".jpg");
-                //return (path, objects);
-
+                
             }, ctoken, TaskCreationOptions.LongRunning);
 
         }
