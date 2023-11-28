@@ -55,3 +55,5 @@ public class Services : YoloParser.IServices
     public void Print(string msg) => Console.WriteLine(msg);
 
 }
+
+public partial class Program { }
