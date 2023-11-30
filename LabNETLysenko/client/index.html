@@ -22,9 +22,9 @@
     <img id="uploaded_image" src="#" alt="Uploaded Image" style="display:none; max-width: 500px;">
 
     <ul id="object-list"></ul>
-
-    <img id="analyzed_image" src="#" alt="Analyzed Image" style="display:none; max-width: 500px;">
-
+    <div id="image-container">
+        <img id="analyzed_image" src="#" alt="Analyzed Image" style="display:none;">
+    </div>
 
     <script type="text/javascript" src="https://ajax.googleapis.com/ajax/libs/jquery/1.8.3/jquery.min.js"></script>
     <script type="text/javascript">
@@ -55,27 +55,6 @@
 
         async function sendImageToServer(imageData) {
             try{
-                // let response = await fetch("https://localhost:7131/ImageAnalysis/analyzeImage", {
-                //     method: "POST",
-                //     headers: {
-                //         "Content-Type": "application/json"
-                //     },
-                //     body: JSON.stringify(imageData),
-                // });
-
-                // // if (!response.ok) {
-                // //     throw new Error('Error analyzing image');
-                // // }
-                // let data = await response.json();
-                // console.log(data);
-                // displayObjects(data);
-                
-                // const imageUrl = URL.createObjectURL(file);
-                // console.log(imageUrl);
-
-                // displayImage(imageUrl, imageContainer);
-
-
                 await fetch("https://localhost:7131/ImageAnalysis/analyzeImage",
                 {
                     method: "POST",
@@ -103,17 +82,29 @@
         
         function displayObjects(objects) {
             const objectList = document.getElementById('object-list');
-            objects.forEach(obj => {
+            objects.forEach((obj, index) => {
                     const listItem = document.createElement('li');
                     listItem.textContent = ` ClassName = ${obj.className} | Confidence = ${obj.confidence} `;
+                    listItem.addEventListener('click', () => highlightBoundingBox(index));
                     objectList.appendChild(listItem);
                 });
         }
 
+        function highlightBoundingBox(index) {
+            const boundingBoxes = document.querySelectorAll('.bounding-box');
+            boundingBoxes.forEach((box, i) => {
+                if (i === index) {
+                    box.style.border = '2px solid blue'; 
+                } else {
+                    box.style.border = '2px solid red';
+                }
+            });
+        }
+
         function drawBoundingBoxes(objects) {
+            const boundingBoxContainer = document.getElementById("image-container");
             const uploadedImage = document.getElementById("uploaded_image");
             const analyzedImage = document.getElementById("analyzed_image");
-
             const img = new Image();
             img.onload = function () {
                 const canvas = document.createElement("canvas");
@@ -123,9 +114,13 @@
                 ctx.drawImage(img, 0, 0, 416, 416);
 
                 objects.forEach(obj => {
-                    ctx.strokeStyle = "red";
-                    ctx.lineWidth = 2;
-                    ctx.strokeRect(obj.leftUpperCornerX, obj.leftUpperCornerY, obj.width, obj.height);
+                    const boundingBox = document.createElement('div');
+                    boundingBox.classList.add('bounding-box');
+                    boundingBox.style.left = (obj.leftUpperCornerX ) + 'px';
+                    boundingBox.style.top = (obj.leftUpperCornerY) + 'px';
+                    boundingBox.style.width = (obj.width) + 'px';
+                    boundingBox.style.height = (obj.height) + 'px';
+                    boundingBoxContainer.appendChild(boundingBox);
                 });
 
                 analyzedImage.src = canvas.toDataURL();
@@ -133,7 +128,6 @@
             };
             img.src = uploadedImage.src;
         }
-
 
     </script>
 </body>

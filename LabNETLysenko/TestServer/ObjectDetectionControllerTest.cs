@@ -17,9 +17,7 @@ namespace TestServer
             string base64Image = Convert.ToBase64String(File.ReadAllBytes("C:\\Users\\79250\\Documents\\LabNETLysenko\\TestServer\\catdog.jpg"));
 
             var postResponse = await client.PostAsync("https://localhost:7131/ImageAnalysis/analyzeImage", new StringContent(base64Image, Encoding.UTF8, "application/json"));
-            // postResponse.EnsureSuccessStatusCode(); 
             var answer = await postResponse.Content.ReadAsStringAsync();
-            //var objAnswer = JsonConvert.DeserializeObject(answer);
             
             Assert.NotNull(answer);
         }
@@ -32,12 +30,8 @@ namespace TestServer
             string base64Image = Convert.ToBase64String(File.ReadAllBytes("C:\\Users\\79250\\Documents\\LabNETLysenko\\TestServer\\catdog.jpg"));
 
             var postResponse = await client.PostAsync("https://localhost:7131/ImageAnalysis/analyzeImage", new StringContent(base64Image, Encoding.UTF8, "application/json"));
-            // postResponse.EnsureSuccessStatusCode(); 
             var answer = await postResponse.Content.ReadAsStringAsync();
 
-            // Assert
-            //Assert.IsType<OkObjectResult>(answer);
-            //Assert.IsType<OkObjectResult>((int) postResponse.StatusCode);
             Assert.Equal(200, (int) postResponse.StatusCode);
 
         }
@@ -49,12 +43,8 @@ namespace TestServer
             string base64Image = "";
 
             var postResponse = await client.PostAsync("https://localhost:7131/ImageAnalysis/analyzeImage", new StringContent(base64Image, Encoding.UTF8, "application/json"));
-            // postResponse.EnsureSuccessStatusCode(); 
             var answer = await postResponse.Content.ReadAsStringAsync();
 
-            // Assert
-            //Assert.IsType<BadRequestObjectResult>(answer);
-            //Assert.IsType<BadRequestObjectResult>(postResponse.StatusCode);
             Assert.Equal(400, (int) postResponse.StatusCode);
 
         }
